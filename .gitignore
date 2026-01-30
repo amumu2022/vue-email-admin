@@ -1,0 +1,135 @@
+# ===========================
+# 项目根目录 .gitignore
+# ===========================
+
+# ===========================
+# 敏感信息和环境配置
+# ===========================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ===========================
+# 数据库文件
+# ===========================
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ===========================
+# 日志文件
+# ===========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===========================
+# 压缩包和备份文件
+# ===========================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.bak
+*.backup
+
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# ===========================
+# 虚拟环境
+# ===========================
+venv/
+ENV/
+env/
+.venv/
+
+# ===========================
+# Node.js
+# ===========================
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# ===========================
+# IDE 和编辑器
+# ===========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-workspace
+*.sublime-project
+
+# ===========================
+# 操作系统
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===========================
+# 密钥和证书
+# ===========================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# ===========================
+# 临时文件
+# ===========================
+tmp/
+temp/
+*.tmp
+*.temp
+*.cache

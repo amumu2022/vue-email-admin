@@ -1,0 +1,588 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  width: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 布局样式 */
+.app-container {
+  display: flex;
+  height: 100%;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #304156;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  height: 60px;
+  background-color: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  justify-content: space-between;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f5f7fa;
+  overflow-y: auto;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* 邮件列表样式 */
+.email-list-item {
+  padding: 15px;
+  border-bottom: 1px solid #ebeef5;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.email-list-item:hover {
+  background-color: #f5f7fa;
+}
+
+.email-list-item.unread {
+  background-color: #ecf5ff;
+}
+
+.email-list-item.unread:hover {
+  background-color: #d9ecff;
+}
+
+.email-subject {
+  font-weight: 500;
+  font-size: 14px;
+  color: #303133;
+  margin-bottom: 5px;
+}
+
+.email-from {
+  font-size: 12px;
+  color: #606266;
+  margin-bottom: 5px;
+}
+
+.email-preview {
+  font-size: 12px;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.email-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 账户列表样式 */
+.account-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+.account-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.account-item.active {
+  background-color: rgba(64, 158, 255, 0.3);
+}
+
+.account-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.account-icon.gmail {
+  background-color: #ea4335;
+}
+
+.account-icon.outlook {
+  background-color: #0078d4;
+}
+
+.account-icon.qq {
+  background-color: #12b7f5;
+}
+
+.account-icon.default {
+  background-color: #909399;
+}
+
+.account-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.account-name {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-email {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+  }
+  
+  .account-info {
+    display: none;
+  }
+  
+  .account-item {
+    justify-content: center;
+    padding: 12px 5px;
+  }
+  
+  .account-icon {
+    margin-right: 0;
+  }
+}
+
+/* ==================== 深色主题 ==================== */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #1a1a2e;
+  color: #e4e4e7;
+}
+
+html.dark .sidebar {
+  background-color: #16213e;
+}
+
+html.dark .header {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+}
+
+html.dark .content {
+  background-color: #111827;
+}
+
+html.dark .card {
+  background-color: #1f2937;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+}
+
+html.dark .email-list-item {
+  border-bottom-color: #374151;
+}
+
+html.dark .email-list-item:hover {
+  background-color: #374151;
+}
+
+html.dark .email-list-item.unread {
+  background-color: #1e3a5f;
+}
+
+html.dark .email-list-item.unread:hover {
+  background-color: #2563eb33;
+}
+
+html.dark .email-subject {
+  color: #e4e4e7;
+}
+
+html.dark .email-from {
+  color: #9ca3af;
+}
+
+html.dark .email-preview {
+  color: #6b7280;
+}
+
+html.dark .email-time {
+  color: #6b7280;
+}
+
+/* Element Plus 深色主题覆盖 */
+html.dark .el-button {
+  --el-button-bg-color: #374151;
+  --el-button-border-color: #4b5563;
+  --el-button-text-color: #e4e4e7;
+  --el-button-hover-bg-color: #4b5563;
+  --el-button-hover-border-color: #6b7280;
+}
+
+html.dark .el-input__wrapper {
+  background-color: #374151;
+  box-shadow: 0 0 0 1px #4b5563 inset;
+}
+
+html.dark .el-input__inner {
+  color: #e4e4e7;
+}
+
+html.dark .el-select__wrapper {
+  background-color: #374151;
+  box-shadow: 0 0 0 1px #4b5563 inset;
+}
+
+html.dark .el-table {
+  --el-table-bg-color: #1f2937;
+  --el-table-tr-bg-color: #1f2937;
+  --el-table-header-bg-color: #374151;
+  --el-table-row-hover-bg-color: #374151;
+  --el-table-border-color: #4b5563;
+  --el-table-text-color: #e4e4e7;
+  --el-table-header-text-color: #e4e4e7;
+}
+
+/* 表格 stripe 行深色模式 */
+html.dark .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: #283548;
+}
+
+/* 表格固定列深色模式 */
+html.dark .el-table__fixed-right,
+html.dark .el-table__fixed {
+  box-shadow: none;
+}
+
+html.dark .el-table__fixed-right::before,
+html.dark .el-table__fixed::before {
+  background-color: #4b5563;
+}
+
+/* 分页组件深色模式 */
+html.dark .el-pagination {
+  --el-pagination-bg-color: #374151;
+  --el-pagination-text-color: #e4e4e7;
+  --el-pagination-button-bg-color: #374151;
+  --el-pagination-button-color: #e4e4e7;
+  --el-pagination-hover-color: #409eff;
+}
+
+html.dark .el-pagination .el-input__wrapper {
+  background-color: #374151;
+  box-shadow: 0 0 0 1px #4b5563 inset;
+}
+
+html.dark .el-pagination .el-select .el-select__wrapper {
+  background-color: #374151;
+  box-shadow: 0 0 0 1px #4b5563 inset;
+}
+
+html.dark .el-pager li {
+  background-color: #374151;
+  color: #e4e4e7;
+}
+
+html.dark .el-pager li:hover {
+  color: #409eff;
+}
+
+html.dark .el-pager li.is-active {
+  color: #409eff;
+}
+
+/* el-card 深色模式 */
+html.dark .el-card {
+  --el-card-bg-color: #1f2937;
+  --el-card-border-color: #374151;
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+html.dark .el-card__header {
+  border-bottom-color: #374151;
+  color: #e4e4e7;
+}
+
+html.dark .el-card__body {
+  color: #e4e4e7;
+}
+
+/* el-empty 深色模式 */
+html.dark .el-empty__description p {
+  color: #9ca3af;
+}
+
+/* ==================== 账户管理页面深色模式 ==================== */
+html.dark .toolbar-title {
+  color: #e4e4e7;
+}
+
+html.dark .account-card-body {
+  background-color: #1f2937;
+}
+
+html.dark .info-label {
+  color: #9ca3af;
+}
+
+html.dark .info-value {
+  color: #d1d5db;
+}
+
+html.dark .account-card-footer {
+  background-color: #283548;
+  border-top-color: #374151;
+}
+
+html.dark .update-time {
+  color: #9ca3af;
+}
+
+/* 账户卡片骨架屏深色模式 */
+html.dark .account-card.card {
+  background-color: #1f2937;
+}
+
+/* ==================== 设置页面深色模式 ==================== */
+html.dark .settings-section.card {
+  background-color: #1f2937;
+}
+
+html.dark .section-title {
+  border-bottom-color: #374151;
+}
+
+html.dark .setting-item {
+  border-bottom-color: #374151;
+}
+
+html.dark .app-name {
+  color: #e4e4e7;
+}
+
+html.dark .app-version {
+  color: #9ca3af;
+}
+
+html.dark .app-desc {
+  color: #d1d5db;
+}
+
+html.dark .tech-stack {
+  border-top-color: #374151;
+}
+
+/* ==================== 滚动条深色模式 ==================== */
+html.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* ==================== MainLayout 深色模式补充 ==================== */
+html.dark .page-title {
+  color: #e4e4e7;
+}
+
+html.dark .menu-toggle {
+  color: #9ca3af;
+}
+
+html.dark .menu-toggle:hover {
+  color: #e4e4e7;
+}
+
+html.dark .el-dialog {
+  --el-dialog-bg-color: #1f2937;
+  --el-dialog-title-font-size: 18px;
+}
+
+html.dark .el-dialog__header {
+  border-bottom: 1px solid #374151;
+}
+
+html.dark .el-dialog__title {
+  color: #e4e4e7;
+}
+
+html.dark .el-form-item__label {
+  color: #e4e4e7;
+}
+
+html.dark .el-dropdown-menu {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+html.dark .el-dropdown-menu__item {
+  color: #e4e4e7;
+}
+
+html.dark .el-dropdown-menu__item:hover {
+  background-color: #374151;
+}
+
+html.dark .el-message-box {
+  --el-messagebox-title-color: #e4e4e7;
+  --el-messagebox-content-color: #9ca3af;
+  background-color: #1f2937;
+}
+
+html.dark .el-skeleton__item {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 37%, #374151 63%);
+}
+
+html.dark .page-title,
+html.dark .section-title,
+html.dark .setting-label {
+  color: #e4e4e7 !important;
+}
+
+html.dark .setting-desc {
+  color: #9ca3af !important;
+}
+
+/* ==================== 紧凑模式 ==================== */
+html.compact-mode .card {
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+html.compact-mode .content {
+  padding: 12px;
+}
+
+html.compact-mode .header {
+  height: 50px;
+}
+
+html.compact-mode .email-list-item {
+  padding: 10px;
+}
+
+html.compact-mode .email-subject {
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+html.compact-mode .email-from,
+html.compact-mode .email-preview,
+html.compact-mode .email-time {
+  font-size: 11px;
+}
+
+html.compact-mode .account-item {
+  padding: 8px 12px;
+  margin-bottom: 3px;
+}
+
+html.compact-mode .account-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+html.compact-mode .account-name {
+  font-size: 13px;
+}
+
+html.compact-mode .account-email {
+  font-size: 11px;
+}
+
+html.compact-mode .nav-item {
+  padding: 10px 12px;
+  margin-bottom: 3px;
+}
+
+html.compact-mode .setting-item {
+  padding: 10px 0;
+}
+
+html.compact-mode .setting-label {
+  font-size: 13px;
+}
+
+html.compact-mode .setting-desc {
+  font-size: 11px;
+}
+
+html.compact-mode .el-table {
+  font-size: 13px;
+}
+
+html.compact-mode .el-button {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+html.compact-mode .el-button--small {
+  padding: 4px 8px;
+  font-size: 12px;
+}

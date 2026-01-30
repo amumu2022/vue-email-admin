@@ -3,6 +3,28 @@
     <div class="settings-container">
       <h2 class="page-title">设置</h2>
 
+      <!-- 服务器设置 -->
+      <div class="settings-section card">
+        <h3 class="section-title">
+          <el-icon><Connection /></el-icon>
+          服务器设置
+        </h3>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">后端服务器地址</div>
+            <div class="setting-desc">当前连接的后端API服务器</div>
+          </div>
+          <div class="server-url-display">
+            <span class="current-url">{{ currentServerUrl || '未配置' }}</span>
+            <el-button type="primary" link @click="goToServerConfig">
+              <el-icon><Edit /></el-icon>
+              修改
+            </el-button>
+          </div>
+        </div>
+      </div>
+
       <!-- 通用设置 -->
       <div class="settings-section card">
         <h3 class="section-title">
@@ -138,8 +160,15 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Setting, Bell, Monitor, InfoFilled, Message, Check } from '@element-plus/icons-vue'
+import { Setting, Bell, Monitor, InfoFilled, Message, Check, Connection, Edit } from '@element-plus/icons-vue'
+import { getApiBaseUrl } from '@/api/request'
+
+const router = useRouter()
+
+// 当前服务器地址
+const currentServerUrl = ref<string | null>(null)
 
 // 设置数据
 interface Settings {
@@ -164,6 +193,11 @@ const defaultSettings: Settings = {
 
 const settings = reactive<Settings>({ ...defaultSettings })
 const saving = ref(false)
+
+// 跳转到服务器配置页面
+function goToServerConfig() {
+  router.push('/server-config')
+}
 
 // 应用主题
 function applyTheme(theme: 'light' | 'dark' | 'auto') {
@@ -244,6 +278,8 @@ function setupSystemThemeListener() {
 onMounted(() => {
   loadSettings()
   setupSystemThemeListener()
+  // 获取当前服务器地址
+  currentServerUrl.value = getApiBaseUrl()
 })
 </script>
 
@@ -309,6 +345,24 @@ onMounted(() => {
   color: #909399;
 }
 
+.server-url-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.current-url {
+  font-size: 13px;
+  color: #606266;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: #f4f4f5;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
 .about-info {
   display: flex;
   align-items: center;
@@ -365,6 +419,12 @@ onMounted(() => {
   padding: 20px 0;
 }
 
+/* 深色模式 */
+html.dark .current-url {
+  background-color: #374151;
+  color: #d1d5db;
+}
+
 @media (max-width: 768px) {
   .settings-container {
     padding: 0 10px;
@@ -374,6 +434,16 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+  
+  .server-url-display {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .current-url {
+    max-width: none;
+    flex: 1;
   }
   
   .about-info {

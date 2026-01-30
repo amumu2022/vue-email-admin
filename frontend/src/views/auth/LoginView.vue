@@ -7,6 +7,16 @@
         <p>请登录您的账户</p>
       </div>
       
+      <!-- 当前服务器地址显示 -->
+      <div v-if="currentServerUrl" class="server-info">
+        <span class="server-label">服务器:</span>
+        <span class="server-url">{{ currentServerUrl }}</span>
+        <el-button type="primary" link size="small" @click="goToServerConfig">
+          <el-icon><Edit /></el-icon>
+          修改
+        </el-button>
+      </div>
+      
       <el-form
         ref="formRef"
         :model="form"
@@ -58,18 +68,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Message, User, Lock } from '@element-plus/icons-vue'
+import { Message, User, Lock, Edit } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores'
 import { initAdmin } from '@/api/auth'
+import { getApiBaseUrl } from '@/api/request'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const currentServerUrl = ref<string | null>(null)
 
 const form = reactive({
   username: '',
@@ -83,6 +95,10 @@ const rules: FormRules = {
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' }
   ]
+}
+
+function goToServerConfig() {
+  router.push('/server-config')
 }
 
 async function handleLogin() {
@@ -119,6 +135,11 @@ async function handleInitAdmin() {
     ElMessage.error(error.response?.data?.detail || '初始化失败')
   }
 }
+
+onMounted(() => {
+  // 获取当前配置的服务器地址
+  currentServerUrl.value = getApiBaseUrl()
+})
 </script>
 
 <style scoped>
@@ -129,6 +150,8 @@ async function handleInitAdmin() {
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  /* 移动端安全区域 */
+  padding-top: max(20px, env(safe-area-inset-top));
 }
 
 .login-card {
@@ -142,7 +165,7 @@ async function handleInitAdmin() {
 
 .login-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .logo-icon {
@@ -163,6 +186,30 @@ async function handleInitAdmin() {
   margin: 0;
 }
 
+.server-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #f4f4f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.server-label {
+  color: #909399;
+}
+
+.server-url {
+  color: #606266;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .login-form {
   margin-bottom: 20px;
 }
@@ -173,5 +220,50 @@ async function handleInitAdmin() {
 
 .login-footer {
   text-align: center;
+}
+
+/* 深色模式 */
+html.dark .login-card {
+  background-color: #1f2937;
+}
+
+html.dark .login-header h1 {
+  color: #e4e4e7;
+}
+
+html.dark .login-header p {
+  color: #9ca3af;
+}
+
+html.dark .server-info {
+  background-color: #374151;
+}
+
+html.dark .server-label {
+  color: #9ca3af;
+}
+
+html.dark .server-url {
+  color: #d1d5db;
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 24px;
+  }
+  
+  .login-header h1 {
+    font-size: 20px;
+  }
+  
+  .server-info {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .server-url {
+    max-width: 100%;
+  }
 }
 </style>

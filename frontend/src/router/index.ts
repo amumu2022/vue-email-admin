@@ -1,14 +1,21 @@
 /*
  * @Author: XDTEAM
  * @Date: 2026-01-29 21:55:17
- * @LastEditTime: 2026-01-30 20:32:39
+ * @LastEditTime: 2026-01-30 22:25:00
  * @LastEditors: XDTEAM
  * @Description: 
  */
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { hasApiBaseUrl } from '@/api/request'
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: '/server-config',
+    name: 'ServerConfig',
+    component: () => import('@/views/auth/ServerConfigView.vue'),
+    meta: { title: '服务器配置', public: true, skipApiCheck: true }
+  },
   {
     path: '/login',
     name: 'Login',
@@ -127,6 +134,19 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   // 设置页面标题
   document.title = `${to.meta.title || '邮箱管理'} - Email Admin`
+  
+  // 如果是服务器配置页面，直接放行
+  if (to.meta.skipApiCheck) {
+    next()
+    return
+  }
+  
+  // 检查是否已配置后端URL
+  if (!hasApiBaseUrl()) {
+    // 未配置后端URL，跳转到服务器配置页面
+    next({ name: 'ServerConfig' })
+    return
+  }
   
   // 公开页面直接放行
   if (to.meta.public) {

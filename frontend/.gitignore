@@ -118,3 +118,9 @@ ios/
 # Vite
 # ===========================
 vite.config.ts.timestamp-*
+
+# ===========================
+# 打包脚本 (包含本地路径配置)
+# ===========================
+build-android.bat
+build-android-release.bat

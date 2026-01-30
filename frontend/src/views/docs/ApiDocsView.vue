@@ -67,7 +67,7 @@
         <div class="api-endpoint">
           <div class="endpoint-header">
             <el-tag type="success" size="large">GET</el-tag>
-            <code class="endpoint-path">/api/open/accounts</code>
+            <code class="endpoint-path">/api/v1/open/accounts</code>
           </div>
           <p class="endpoint-desc">获取已添加的邮箱账户列表（不包含密码等敏感信息）</p>
           
@@ -96,7 +96,7 @@
         <div class="api-endpoint">
           <div class="endpoint-header">
             <el-tag type="success" size="large">GET</el-tag>
-            <code class="endpoint-path">/api/open/accounts/{email_address}/emails</code>
+            <code class="endpoint-path">/api/v1/open/accounts/{email_address}/emails</code>
           </div>
           <p class="endpoint-desc">获取指定邮箱的邮件列表，包含邮件内容（不包含内嵌图片）</p>
           
@@ -147,7 +147,7 @@
         <div class="api-endpoint">
           <div class="endpoint-header">
             <el-tag type="success" size="large">GET</el-tag>
-            <code class="endpoint-path">/api/open/emails</code>
+            <code class="endpoint-path">/api/v1/open/emails</code>
           </div>
           <p class="endpoint-desc">获取所有邮箱账户的邮件列表，包含邮件内容（不包含内嵌图片）</p>
           
@@ -184,7 +184,7 @@
         <div class="api-endpoint">
           <div class="endpoint-header">
             <el-tag type="success" size="large">GET</el-tag>
-            <code class="endpoint-path">/api/open/emails/{email_id}</code>
+            <code class="endpoint-path">/api/v1/open/emails?email_id={email_id}</code>
           </div>
           <p class="endpoint-desc">根据邮件 ID 获取单封邮件的详细信息</p>
           
@@ -286,19 +286,19 @@ const baseUrl = computed(() => {
 
 // cURL 示例
 const curlAccountsExample = computed(() => 
-`curl -X GET "${baseUrl.value}/api/open/accounts" \\
+`curl -X GET "${baseUrl.value}/api/v1/open/accounts" \\
   -H "Authorization: Bearer your_api_token"`)
 
 const curlEmailsByAccountExample = computed(() => 
-`curl -X GET "${baseUrl.value}/api/open/accounts/example@gmail.com/emails?limit=10&page=1" \\
+`curl -X GET "${baseUrl.value}/api/v1/open/accounts/example@gmail.com/emails?limit=10&page=1" \\
   -H "Authorization: Bearer your_api_token"`)
 
 const curlAllEmailsExample = computed(() => 
-`curl -X GET "${baseUrl.value}/api/open/emails?limit=10&page=1" \\
+`curl -X GET "${baseUrl.value}/api/v1/open/emails?limit=10&page=1" \\
   -H "Authorization: Bearer your_api_token"`)
 
 const curlEmailDetailExample = computed(() => 
-`curl -X GET "${baseUrl.value}/api/open/emails/email_id_here" \\
+`curl -X GET "${baseUrl.value}/api/v1/open/emails?email_id=email_id_here" \\
   -H "Authorization: Bearer your_api_token"`)
 
 // 响应示例

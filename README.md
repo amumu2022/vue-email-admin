@@ -110,6 +110,7 @@ emailAdmin/
 │   │   ├── logger.py            # 日志配置
 │   │   └── schemas.py           # Pydantic 模型
 │   ├── main.py                  # 应用入口
+│   ├── run.sh                   # Linux/Mac 一键管理脚本
 │   ├── requirements.txt         # Python 依赖
 │   └── .env.example             # 环境变量示例
 │
@@ -130,11 +131,42 @@ emailAdmin/
 ### 1️⃣ 克隆项目
 
 ```bash
-git clone https://github.com/your-username/emailAdmin.git
-cd emailAdmin
+git clone https://gitee.com/xdteam-mumu/vue-email-admin.git
+cd vue-email-admin
 ```
 
 ### 2️⃣ 后端配置与启动
+
+#### 方式一：使用一键管理脚本（Linux/Mac 推荐）
+
+项目提供了 `run.sh` 脚本，可以一键完成环境配置和启动：
+
+```bash
+# 进入后端目录
+cd backend
+
+# 添加执行权限
+chmod +x run.sh
+
+# 运行脚本
+./run.sh
+```
+
+脚本提供以下功能菜单：
+
+| 选项 | 功能 |
+|------|------|
+| 1 | 一键启动 EmailAdmin |
+| 2 | 一键更新（全部自动） |
+| 3 | 更新系统软件包 |
+| 4 | 安装/检查 Python 依赖 |
+| 5 | 更新 EmailAdmin 代码 |
+| 6 | 创建虚拟环境并安装依赖 |
+| 0 | 退出 |
+
+> 💡 **提示**: 10秒内未选择将自动执行选项 1（启动服务）
+
+#### 方式二：手动配置
 
 ```bash
 # 进入后端目录
@@ -149,8 +181,8 @@ venv\Scripts\activate
 # Linux/Mac:
 source venv/bin/activate
 
-# 安装依赖
-pip install -r requirements.txt
+# 安装依赖（使用阿里云镜像加速）
+pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 # 复制环境变量配置文件
 cp .env.example .env
@@ -220,30 +252,149 @@ server {
     location / {
         try_files $uri $uri/ /index.html;
     }
-    
-    # API 代理
-    location /api {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
 }
 ```
 
+> 💡 **说明**: 前端应用启动时会引导用户配置后端服务器地址，无需在 Nginx 中配置 API 代理。如果前后端部署在同一服务器，也可以添加 API 代理配置。
+
 ### Android 打包
+
+#### 环境要求
+
+| 环境 | 说明 |
+|------|------|
+| Node.js | >= 18.0 |
+| Android Studio | 最新版本 |
+| JDK | Android Studio 自带 JBR 或 JDK 11+ |
+| Android SDK | API Level 22+ |
+
+#### 方式一：使用一键打包脚本（Windows）
+
+项目提供了 Windows 批处理脚本，可以一键完成打包：
 
 ```bash
 cd frontend
 
-# 构建并同步
-npm run build:android
+# Debug 版本（用于开发测试）
+build-android.bat
 
-# 或分步执行
+# Release 版本（用于发布）
+build-android-release.bat
+```
+
+> ⚠️ **注意**: 首次运行前，请修改脚本中的 `JAVA_HOME` 路径为您的 Android Studio JBR 路径，默认为 `C:\Program Files\Android\Android Studio\jbr`
+
+#### 方式二：手动打包步骤
+
+**1. 构建前端项目**
+
+```bash
+cd frontend
 npm run build
+```
+
+**2. 初始化 Android 项目（首次）**
+
+```bash
+# 添加 Android 平台（仅首次需要）
 npx cap add android
+```
+
+**3. 同步 Web 资源到 Android**
+
+```bash
 npx cap sync android
+```
+
+**4. 打开 Android Studio**
+
+```bash
 npx cap open android
 ```
+
+**5. 在 Android Studio 中打包**
+
+- 等待 Gradle 同步完成
+- 菜单栏选择 `Build` → `Build Bundle(s) / APK(s)` → `Build APK(s)`
+- 或使用命令行：
+  ```bash
+  cd frontend/android
+  # Windows
+  gradlew.bat assembleDebug
+  # Linux/Mac
+  ./gradlew assembleDebug
+  ```
+
+**6. 获取 APK 文件**
+
+打包完成后，APK 文件位于：
+- Debug 版本: `frontend/android/app/build/outputs/apk/debug/EmailAdmin-v{版本号}-debug.apk`
+- Release 版本: `frontend/android/app/build/outputs/apk/release/EmailAdmin-v{版本号}-release.apk`
+
+#### 方式三：使用 npm 脚本
+
+```bash
+cd frontend
+
+# 构建并同步到 Android
+npm run build:android
+
+# 打开 Android Studio
+npm run cap:open:android
+```
+
+#### Release 版本签名
+
+Release 版本需要签名后才能安装，步骤如下：
+
+**1. 生成签名密钥**
+
+```bash
+keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias
+```
+
+**2. 配置签名信息**
+
+在 `frontend/android/app/build.gradle` 中添加签名配置：
+
+```gradle
+android {
+    ...
+    signingConfigs {
+        release {
+            storeFile file('my-release-key.jks')
+            storePassword 'your-store-password'
+            keyAlias 'my-key-alias'
+            keyPassword 'your-key-password'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            ...
+        }
+    }
+}
+```
+
+**3. 打包签名版本**
+
+```bash
+cd frontend/android
+# Windows
+gradlew.bat assembleRelease
+# Linux/Mac
+./gradlew assembleRelease
+```
+
+#### 常见问题
+
+| 问题 | 解决方案 |
+|------|----------|
+| Gradle 同步失败 | 检查网络连接，配置 Gradle 代理或使用国内镜像 |
+| JAVA_HOME 未设置 | 设置环境变量指向 JDK 路径，或修改脚本中的 JAVA_HOME |
+| SDK 版本不匹配 | 在 Android Studio 中安装对应版本的 SDK |
+| 打包后无法连接服务器 | 检查 `capacitor.config.ts` 中的服务器配置，确保 `cleartext: true` |
 
 ### iOS 打包
 
@@ -391,7 +542,7 @@ npx cap open ios
 
 ## 📞 联系方式
 
-如有问题或建议，欢迎提交 [Issue](https://github.com/your-username/emailAdmin/issues)。
+如有问题或建议，欢迎提交 [Issue](https://gitee.com/xdteam-mumu/vue-email-admin/issues)。
 
 ---
 

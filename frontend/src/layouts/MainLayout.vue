@@ -258,6 +258,11 @@
           </transition>
         </router-view>
       </div>
+      
+      <!-- 页脚 -->
+      <footer class="app-footer">
+        <span class="footer-info">EmailAdmin v{{ appVersion }} | 作者：小墩</span>
+      </footer>
     </main>
   </div>
 </template>
@@ -289,6 +294,9 @@ const unreadCount = computed(() => emailStore.unreadCount)
 const refreshing = computed(() => emailStore.refreshing)
 const username = computed(() => authStore.username || 'User')
 const isAdmin = computed(() => authStore.isAdmin)
+
+// 应用版本号（从 package.json 获取）
+const appVersion = __APP_VERSION__
 
 const pageTitle = computed(() => {
   return (route.meta.title as string) || '邮箱管理'
@@ -356,6 +364,10 @@ function toggleLogsMenu() {
     // 折叠状态下点击直接跳转到第一个子菜单
     router.push('/logs/open-api')
   } else {
+    // 手风琴效果：展开日志菜单时关闭邮件中心菜单
+    if (!logsMenuExpanded.value) {
+      mailCenterMenuExpanded.value = false
+    }
     logsMenuExpanded.value = !logsMenuExpanded.value
   }
 }
@@ -365,6 +377,10 @@ function toggleMailCenterMenu() {
     // 折叠状态下点击直接跳转到收件箱
     router.push('/inbox')
   } else {
+    // 手风琴效果：展开邮件中心菜单时关闭日志菜单
+    if (!mailCenterMenuExpanded.value) {
+      logsMenuExpanded.value = false
+    }
     mailCenterMenuExpanded.value = !mailCenterMenuExpanded.value
   }
 }
@@ -446,6 +462,7 @@ onUnmounted(() => {
   flex-direction: column;
   transition: all 0.3s ease;
   z-index: 999;
+  overflow: hidden;
 }
 
 .sidebar.collapsed {
@@ -621,10 +638,31 @@ onUnmounted(() => {
 .nav-menu {
   flex: 1;
   padding: 15px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 .sidebar.collapsed .nav-menu {
   padding: 10px 8px;
+}
+
+/* 导航菜单滚动条样式 */
+.nav-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.nav-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .nav-item {
@@ -817,6 +855,21 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 
+.app-footer {
+  height: 40px;
+  background-color: #fff;
+  border-top: 1px solid #e6e6e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-info {
+  font-size: 12px;
+  color: #909399;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -828,6 +881,12 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .app-container {
+    /* 移动端添加顶部安全区域，避免与手机状态栏遮挡 */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: constant(safe-area-inset-top, 0px); /* iOS 11.0-11.2 兼容 */
+  }
+  
   .sidebar {
     position: fixed;
     top: 0;
@@ -835,14 +894,29 @@ onUnmounted(() => {
     height: 100%;
     width: 240px;
     transform: translateX(0);
+    /* 侧边栏也需要考虑安全区域 */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: constant(safe-area-inset-top, 0px);
   }
   
   .sidebar.hidden {
     transform: translateX(-100%);
   }
   
+  .sidebar-overlay {
+    /* 遮罩层从安全区域下方开始 */
+    top: env(safe-area-inset-top, 0px);
+    top: constant(safe-area-inset-top, 0px);
+  }
+  
   .main-content {
     width: 100%;
+  }
+  
+  .header {
+    /* 移动端顶部栏增加顶部内边距，避免与状态栏重叠 */
+    padding: 0 10px;
+    min-height: 60px;
   }
   
   .page-title {
@@ -855,10 +929,6 @@ onUnmounted(() => {
   
   .btn-text {
     display: none;
-  }
-  
-  .header {
-    padding: 0 10px;
   }
 }
 

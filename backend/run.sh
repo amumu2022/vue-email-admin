@@ -18,8 +18,10 @@ PIP_MIRROR="https://mirrors.aliyun.com/pypi/simple/"
 EmailAdmin_repo_url="https://gitee.com/xdteam-mumu/vue-email-admin.git"
 DEFAULT_TIMEOUT=10
 
-# 获取脚本所在目录
+# 获取脚本所在目录（backend 目录）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 项目根目录（backend 的上级目录）
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$SCRIPT_DIR"
 
 # 1. 更新系统软件包
@@ -85,27 +87,24 @@ install_python() {
 # 3. 更新 EmailAdmin 代码
 update_code() {
     yellow "=============== 更新 EmailAdmin ==============="
-    
-    # 返回项目根目录
-    cd "$SCRIPT_DIR/.."
-    
-    if [ ! -d ".git" ]; then
-        yellow "初始化 Git 仓库..."
-        git init
-        git remote add origin $EmailAdmin_repo_url 2>/dev/null || git remote set-url origin $EmailAdmin_repo_url
-    fi
-    
+    green "用户选择强制更新仓库"
+
+    yellow "=============== 仓库代码更新 ==============="
+    # 切换到项目根目录进行 git 操作
+    cd "$PROJECT_ROOT"
+    git init
+    git remote add origin $EmailAdmin_repo_url 2>/dev/null || git remote set-url origin $EmailAdmin_repo_url
     yellow "仓库初始化完成"
-    yellow "正在强制拉取仓库..."
+    yellow "正在强制拉取仓库"
     git fetch origin
     git reset --hard origin/master
     yellow "仓库代码更新完成"
-    
-    # 返回 backend 目录
+    # 切换回 backend 目录
     cd "$SCRIPT_DIR"
-    
+    yellow "=============== 仓库代码更新 ==============="
     green "=============== EmailAdmin 更新完成 ==============="
 }
+
 
 # 4. 创建虚拟环境
 create_venv() {

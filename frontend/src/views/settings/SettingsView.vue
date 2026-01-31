@@ -119,6 +119,145 @@
         </div>
       </div>
 
+      <!-- 缓存设置 -->
+      <div class="settings-section card">
+        <h3 class="section-title">
+          <el-icon><FolderOpened /></el-icon>
+          缓存设置
+        </h3>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">邮件本地缓存</div>
+            <div class="setting-desc">缓存邮件数据到本地，加快加载速度（缓存30分钟后自动过期）</div>
+          </div>
+          <el-switch v-model="settings.enableCache" />
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">清除缓存</div>
+            <div class="setting-desc">清除所有本地缓存的邮件数据</div>
+          </div>
+          <el-button type="danger" :loading="clearingCache" @click="handleClearCache">
+            <el-icon><Delete /></el-icon>
+            清除缓存
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 版本更新 -->
+      <div class="settings-section card">
+        <h3 class="section-title">
+          <el-icon><Upload /></el-icon>
+          版本更新
+        </h3>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">当前版本</div>
+            <div class="setting-desc">v{{ appVersion }}</div>
+          </div>
+          <el-button
+            type="primary"
+            :loading="checkingUpdate"
+            @click="handleCheckUpdate"
+          >
+            <el-icon><Refresh /></el-icon>
+            检查更新
+          </el-button>
+        </div>
+
+        <div v-if="updateInfo" class="update-info">
+          <div v-if="updateInfo.hasUpdate" class="update-available">
+            <el-alert
+              title="发现新版本"
+              type="success"
+              :closable="false"
+              show-icon
+            >
+              <template #default>
+                <div class="update-details">
+                  <p>最新版本: <strong>v{{ updateInfo.latestVersion }}</strong></p>
+                  <p v-if="updateInfo.releaseInfo?.published_at">
+                    发布时间: {{ formatDate(updateInfo.releaseInfo.published_at) }}
+                  </p>
+                </div>
+              </template>
+            </el-alert>
+            
+            <div class="update-actions">
+              <el-button
+                type="primary"
+                @click="downloadUpdate('apk')"
+                v-if="updateInfo.downloadUrls.apk"
+              >
+                <el-icon><Download /></el-icon>
+                下载 APK
+              </el-button>
+              <el-button
+                @click="viewReleaseNotes"
+                v-if="updateInfo.releaseInfo?.html_url"
+              >
+                <el-icon><Document /></el-icon>
+                查看更新日志
+              </el-button>
+            </div>
+          </div>
+          
+          <div v-else class="no-update">
+            <el-alert
+              title="已是最新版本"
+              type="info"
+              :closable="false"
+              show-icon
+            >
+              <template #default>
+                当前版本 v{{ appVersion }} 已是最新版本
+              </template>
+            </el-alert>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">固定下载链接</div>
+            <div class="setting-desc">以下链接始终指向最新版本，可用于自动更新</div>
+          </div>
+        </div>
+        
+        <div class="download-links">
+          <div class="download-link-item">
+            <span class="link-label">APK:</span>
+            <el-link
+              type="primary"
+              :href="fixedDownloadUrls.apk"
+              target="_blank"
+              :underline="false"
+            >
+              {{ fixedDownloadUrls.apk }}
+            </el-link>
+            <el-button size="small" @click="copyToClipboard(fixedDownloadUrls.apk)">
+              <el-icon><CopyDocument /></el-icon>
+            </el-button>
+          </div>
+          <div class="download-link-item">
+            <span class="link-label">前端:</span>
+            <el-link
+              type="primary"
+              :href="fixedDownloadUrls.frontend"
+              target="_blank"
+              :underline="false"
+            >
+              {{ fixedDownloadUrls.frontend }}
+            </el-link>
+            <el-button size="small" @click="copyToClipboard(fixedDownloadUrls.frontend)">
+              <el-icon><CopyDocument /></el-icon>
+            </el-button>
+          </div>
+        </div>
+      </div>
+
       <!-- 关于 -->
       <div class="settings-section card">
         <h3 class="section-title">
@@ -132,7 +271,7 @@
           </div>
           <div class="app-details">
             <h4 class="app-name">邮箱管理平台</h4>
-            <p class="app-version">版本 1.0.0</p>
+            <p class="app-version">版本 {{ appVersion }}</p>
             <p class="app-desc">一个简洁高效的多账户邮箱管理工具</p>
           </div>
         </div>
@@ -162,13 +301,27 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Setting, Bell, Monitor, InfoFilled, Message, Check, Connection, Edit } from '@element-plus/icons-vue'
+import { Setting, Bell, Monitor, InfoFilled, Message, Check, Connection, Edit, FolderOpened, Delete, Upload, Refresh, Download, Document, CopyDocument } from '@element-plus/icons-vue'
 import { getApiBaseUrl } from '@/api/request'
+import { useEmailStore } from '@/stores'
+import { checkForUpdate, getFixedDownloadUrls, type VersionInfo } from '@/api/version'
 
 const router = useRouter()
+const emailStore = useEmailStore()
+
+// 应用版本号（从 package.json 获取）
+const appVersion = __APP_VERSION__
 
 // 当前服务器地址
 const currentServerUrl = ref<string | null>(null)
+
+// 清除缓存状态
+const clearingCache = ref(false)
+
+// 版本更新相关
+const checkingUpdate = ref(false)
+const updateInfo = ref<VersionInfo | null>(null)
+const fixedDownloadUrls = getFixedDownloadUrls()
 
 // 设置数据
 interface Settings {
@@ -179,6 +332,7 @@ interface Settings {
   notificationSound: boolean
   theme: 'light' | 'dark' | 'auto'
   compactMode: boolean
+  enableCache: boolean
 }
 
 const defaultSettings: Settings = {
@@ -188,7 +342,8 @@ const defaultSettings: Settings = {
   notifications: true,
   notificationSound: true,
   theme: 'light',
-  compactMode: false
+  compactMode: false,
+  enableCache: true
 }
 
 const settings = reactive<Settings>({ ...defaultSettings })
@@ -272,6 +427,88 @@ function setupSystemThemeListener() {
       applyTheme('auto')
     }
   })
+}
+
+// 清除缓存
+async function handleClearCache() {
+  clearingCache.value = true
+  try {
+    await emailStore.clearCache()
+    ElMessage.success('缓存已清除')
+  } catch {
+    ElMessage.error('清除缓存失败')
+  } finally {
+    clearingCache.value = false
+  }
+}
+
+// 检查更新
+async function handleCheckUpdate() {
+  checkingUpdate.value = true
+  updateInfo.value = null
+  try {
+    const result = await checkForUpdate(appVersion)
+    updateInfo.value = result
+    if (result.hasUpdate) {
+      ElMessage.success(`发现新版本 v${result.latestVersion}`)
+    } else {
+      ElMessage.info('当前已是最新版本')
+    }
+  } catch (error) {
+    console.error('检查更新失败:', error)
+    ElMessage.error('检查更新失败，请稍后重试')
+  } finally {
+    checkingUpdate.value = false
+  }
+}
+
+// 格式化日期
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 下载更新
+function downloadUpdate(type: 'apk' | 'frontend') {
+  if (!updateInfo.value) return
+  
+  const url = type === 'apk'
+    ? updateInfo.value.downloadUrls.apk
+    : updateInfo.value.downloadUrls.frontend
+  
+  if (url) {
+    window.open(url, '_blank')
+  }
+}
+
+// 查看更新日志
+function viewReleaseNotes() {
+  if (updateInfo.value?.releaseInfo?.html_url) {
+    window.open(updateInfo.value.releaseInfo.html_url, '_blank')
+  }
+}
+
+// 复制到剪贴板
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    ElMessage.success('已复制到剪贴板')
+  } catch {
+    // 降级方案
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    ElMessage.success('已复制到剪贴板')
+  }
 }
 
 // 生命周期
@@ -425,6 +662,72 @@ html.dark .current-url {
   color: #d1d5db;
 }
 
+/* 版本更新样式 */
+.update-info {
+  margin: 15px 0;
+}
+
+.update-details p {
+  margin: 5px 0;
+  font-size: 13px;
+  color: #606266;
+}
+
+.update-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.no-update {
+  margin-top: 10px;
+}
+
+.download-links {
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.download-link-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.download-link-item:not(:last-child) {
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.link-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #606266;
+  min-width: 50px;
+}
+
+.download-link-item .el-link {
+  flex: 1;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* 深色模式 - 版本更新 */
+html.dark .download-links {
+  background-color: #374151;
+}
+
+html.dark .link-label {
+  color: #d1d5db;
+}
+
+html.dark .update-details p {
+  color: #d1d5db;
+}
+
 @media (max-width: 768px) {
   .settings-container {
     padding: 0 10px;
@@ -456,6 +759,23 @@ html.dark .current-url {
   }
   
   .settings-actions .el-button {
+    width: 100%;
+  }
+  
+  .update-actions {
+    flex-direction: column;
+  }
+  
+  .update-actions .el-button {
+    width: 100%;
+  }
+  
+  .download-link-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .download-link-item .el-link {
     width: 100%;
   }
 }

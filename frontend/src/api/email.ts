@@ -1,7 +1,7 @@
 /*
  * @Author: XDTEAM
  * @Date: 2026-01-29 21:57:11
- * @LastEditTime: 2026-01-29 21:57:16
+ * @LastEditTime: 2026-01-31 21:09:53
  * @LastEditors: XDTEAM
  * @Description: 
  */
@@ -16,6 +16,7 @@ export function getEmails(params: {
   pageSize?: number
   search?: string
 }): Promise<ApiResponse<PaginatedResponse<Email>>> {
+  // 确保只传递有效的 API 参数，过滤掉前端内部使用的参数
   return request.get('/emails', { params })
 }
 

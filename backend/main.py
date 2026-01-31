@@ -1,7 +1,7 @@
 '''
 Author: XDTEAM
 Date: 2026-01-29 22:05:13
-LastEditTime: 2026-01-30 20:21:10
+LastEditTime: 2026-01-31 21:07:39
 LastEditors: XDTEAM
 Description: 
 '''
@@ -38,6 +38,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=86400,  # 预检请求缓存时间（秒），86400秒 = 24小时
 )
 
 
@@ -113,7 +114,7 @@ app.include_router(open_api.router, prefix="/api/v1/open", tags=["开放API"])
 
 @app.get("/")
 async def root():
-    return {"message": "邮箱管理平台 API", "version": "1.0.0"}
+    return {"message": "邮箱管理平台 API", "version": "1.2.0"}
 
 
 @app.get("/api/health")
@@ -123,4 +124,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app="main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app="main:app", host="0.0.0.0", port=8655, reload=False)

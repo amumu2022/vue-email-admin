@@ -225,6 +225,60 @@ npm run dev
 
 > ⚠️ **安全提示**: 请在生产环境中立即修改默认密码！
 
+## 🔄 自动构建与发布
+
+项目配置了 GitHub Actions 自动构建工作流，支持自动打包前端页面和 Android APK。
+
+### 触发方式
+
+| 方式 | 说明 |
+|------|------|
+| 推送 Tag | 推送 `v*` 格式的 tag 时自动触发（如 `v1.2.0`） |
+| 手动触发 | 在 GitHub Actions 页面手动运行，输入版本号 |
+
+### 自动构建产物
+
+| 产物 | 说明 |
+|------|------|
+| `frontend-dist.zip` | 前端构建产物，可直接部署到 Web 服务器 |
+| `EmailAdmin-latest.apk` | Android APK（未签名），需要自行签名后安装 |
+
+### 固定下载链接
+
+为了方便自动更新和分发，项目提供了固定的下载链接，这些链接始终指向最新版本：
+
+| 文件 | 固定下载链接 |
+|------|-------------|
+| 前端页面 | `https://github.com/{owner}/{repo}/releases/download/latest/frontend-dist.zip` |
+| Android APK | `https://github.com/{owner}/{repo}/releases/download/latest/EmailAdmin-latest.apk` |
+
+> 💡 **提示**: 请将 `{owner}` 和 `{repo}` 替换为实际的 GitHub 用户名和仓库名。
+
+### 发布新版本
+
+```bash
+# 1. 更新 package.json 中的版本号
+cd frontend
+npm version 1.2.0
+
+# 2. 提交更改
+git add .
+git commit -m "chore: bump version to 1.2.0"
+
+# 3. 创建并推送 tag
+git tag v1.2.0
+git push origin main --tags
+```
+
+### 版本更新功能
+
+应用内置了版本更新检查功能，在「设置」页面可以：
+
+- 检查是否有新版本
+- 查看更新日志
+- 直接下载最新版本的 APK
+- 复制固定下载链接
+
 ## 📦 打包部署
 
 ### Web 部署
@@ -518,6 +572,8 @@ npx cap open ios
 - [x] Token API 管理
 - [x] 访问日志记录
 - [x] 数据统计仪表盘
+- [x] GitHub Actions 自动构建
+- [x] 版本更新检查功能
 - [ ] 邮件发送功能
 - [ ] 邮件搜索优化
 - [ ] 邮件标签管理

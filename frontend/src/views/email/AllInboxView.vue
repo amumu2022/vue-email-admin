@@ -166,12 +166,13 @@ watch(filterAccountId, () => {
 })
 
 // 方法
-async function loadEmails() {
+async function loadEmails(skipBackgroundRefresh: boolean = false) {
   loading.value = true
   try {
     const params: Record<string, unknown> = {
       page: pagination.value.page,
-      pageSize: pagination.value.pageSize
+      pageSize: pagination.value.pageSize,
+      skipBackgroundRefresh
     }
     if (filterAccountId.value) {
       params.accountId = filterAccountId.value
@@ -186,6 +187,9 @@ async function loadEmails() {
       pagination.value.total = result.total
       pagination.value.totalPages = result.totalPages
     }
+  } catch (err) {
+    console.error('加载邮件失败:', err)
+    // 错误已在 store 中处理，这里不需要额外处理
   } finally {
     loading.value = false
   }
@@ -305,7 +309,8 @@ async function handleRefresh() {
 // 生命周期
 onMounted(async () => {
   await accountStore.fetchAccounts()
-  loadEmails()
+  // 初次加载时跳过后台静默更新，优先使用缓存
+  loadEmails(true)
 })
 </script>
 

@@ -340,7 +340,6 @@ function checkMobile() {
 // 方法
 function selectAccount(id: string) {
   accountStore.setCurrentAccount(id)
-  emailStore.fetchEmails({ accountId: id })
   // 自动跳转到收件箱
   router.push('/inbox')
   if (isMobile.value) {
@@ -885,6 +884,9 @@ onUnmounted(() => {
     /* 移动端添加顶部安全区域，避免与手机状态栏遮挡 */
     padding-top: env(safe-area-inset-top, 0px);
     padding-top: constant(safe-area-inset-top, 0px); /* iOS 11.0-11.2 兼容 */
+    /* 移动端添加底部安全区域，避免与手机底部导航栏遮挡 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: constant(safe-area-inset-bottom, 0px);
   }
   
   .sidebar {
@@ -911,24 +913,80 @@ onUnmounted(() => {
   
   .main-content {
     width: 100%;
+    /* 确保主内容区域填满可用空间 */
+    min-height: 0;
   }
   
   .header {
-    /* 移动端顶部栏增加顶部内边距，避免与状态栏重叠 */
+    /* 移动端顶部栏减小高度，增加内容显示空间 */
+    height: 48px;
+    min-height: 48px;
     padding: 0 10px;
-    min-height: 60px;
   }
   
   .page-title {
-    font-size: 16px;
+    font-size: 15px;
   }
   
   .content {
-    padding: 10px;
+    padding: 8px;
+    /* 确保内容区域可以滚动并填满剩余空间 */
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  
+  .app-footer {
+    /* 移动端页脚减小高度 */
+    height: 32px;
+    min-height: 32px;
+    padding: 0 10px;
+    /* 添加底部安全区域内边距 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: constant(safe-area-inset-bottom, 0px);
+  }
+  
+  .footer-info {
+    font-size: 11px;
   }
   
   .btn-text {
     display: none;
+  }
+  
+  /* 移动端菜单按钮优化 */
+  .menu-toggle {
+    padding: 8px;
+  }
+  
+  /* 移动端刷新按钮优化 */
+  .header-right .el-button {
+    padding: 8px 12px;
+  }
+}
+
+/* 超小屏幕设备优化 (小于 480px) */
+@media (max-width: 480px) {
+  .header {
+    height: 44px;
+    min-height: 44px;
+  }
+  
+  .page-title {
+    font-size: 14px;
+  }
+  
+  .app-footer {
+    height: 28px;
+    min-height: 28px;
+  }
+  
+  .footer-info {
+    font-size: 10px;
+  }
+  
+  .content {
+    padding: 6px;
   }
 }
 

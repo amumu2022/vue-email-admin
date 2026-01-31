@@ -24,6 +24,12 @@
         </el-button-group>
       </div>
       <div class="toolbar-right">
+        <el-tooltip content="刷新当前邮箱" placement="bottom">
+          <el-button type="primary" :loading="refreshLoading" @click="handleManualRefresh">
+            <el-icon><Refresh /></el-icon>
+            <span class="refresh-text">刷新</span>
+          </el-button>
+        </el-tooltip>
         <el-input
           v-model="searchQuery"
           placeholder="搜索邮件..."
@@ -115,7 +121,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { View, Hide, Delete, Star } from '@element-plus/icons-vue'
+import { View, Hide, Delete, Star, Refresh } from '@element-plus/icons-vue'
 import { useEmailStore, useAccountStore } from '@/stores'
 import { formatDate, truncateText } from '@/utils/email'
 import type { Email, EmailAddress } from '@/types'
@@ -128,6 +134,7 @@ const accountStore = useAccountStore()
 const searchQuery = ref('')
 const selectedIds = ref<string[]>([])
 const selectAll = ref(false)
+const refreshLoading = ref(false)
 
 // 自动刷新定时器
 let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
@@ -176,8 +183,10 @@ function startAutoRefresh() {
   
   autoRefreshTimer = setInterval(async () => {
     try {
-      const result = await emailStore.refreshEmails(currentAccountId.value || undefined)
+      // 刷新全部邮箱的邮件（不传 accountId 参数）
+      const result = await emailStore.refreshEmails()
       if (result && result.newCount > 0) {
+        // 重新加载当前邮箱的邮件
         loadEmails()
         // 如果启用了通知
         if (settings.notifications) {
@@ -223,15 +232,17 @@ const isIndeterminate = computed(() => {
 // 监听账户变化
 watch(currentAccountId, (newId) => {
   if (newId) {
-    loadEmails()
+    // 切换账号时跳过后台静默更新，优先使用缓存
+    loadEmails(true)
   }
 })
 
 // 方法
-function loadEmails() {
+function loadEmails(skipBackgroundRefresh: boolean = false) {
   emailStore.fetchEmails({
     accountId: currentAccountId.value || undefined,
-    search: searchQuery.value || undefined
+    search: searchQuery.value || undefined,
+    skipBackgroundRefresh
   })
 }
 
@@ -338,10 +349,35 @@ async function handleRefresh() {
   loadEmails()
 }
 
+// 手动刷新当前邮箱
+async function handleManualRefresh() {
+  if (!currentAccountId.value) {
+    ElMessage.warning('请先选择一个邮箱账户')
+    return
+  }
+  
+  refreshLoading.value = true
+  try {
+    const result = await emailStore.refreshEmails(currentAccountId.value)
+    loadEmails()
+    if (result && result.newCount > 0) {
+      ElMessage.success(`刷新成功，收到 ${result.newCount} 封新邮件`)
+    } else {
+      ElMessage.success('刷新成功，暂无新邮件')
+    }
+  } catch (err) {
+    console.error('刷新失败:', err)
+    ElMessage.error('刷新失败，请稍后重试')
+  } finally {
+    refreshLoading.value = false
+  }
+}
+
 // 生命周期
 onMounted(() => {
   if (currentAccountId.value) {
-    loadEmails()
+    // 初次加载时跳过后台静默更新，优先使用缓存
+    loadEmails(true)
   }
   // 启动自动刷新
   startAutoRefresh()
@@ -509,6 +545,12 @@ onUnmounted(() => {
   border-top: 1px solid #ebeef5;
 }
 
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;
@@ -520,8 +562,26 @@ onUnmounted(() => {
     width: 100%;
   }
   
+  .toolbar-right {
+    flex-wrap: wrap;
+  }
+  
   .toolbar-right .el-input {
     width: 100% !important;
+    order: 2;
+  }
+  
+  .toolbar-right .el-tooltip {
+    order: 1;
+    flex: 1;
+  }
+  
+  .toolbar-right .el-tooltip .el-button {
+    width: 100%;
+  }
+  
+  .refresh-text {
+    display: inline;
   }
   
   .email-actions {

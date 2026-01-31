@@ -1,0 +1,199 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "版本号 (例如: 1.2.0)"
+        required: true
+        default: "1.0.0"
+
+env:
+  NODE_VERSION: "20"
+  JAVA_VERSION: "17"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Get version from tag or input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Update version in package.json
+        working-directory: frontend
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Package frontend dist
+        run: |
+          cd frontend/dist
+          zip -r ../../frontend-dist.zip .
+          cd ../..
+
+      - name: Sync Capacitor
+        working-directory: frontend
+        run: npx cap sync android
+
+      - name: Update Android version
+        working-directory: frontend/android
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          VERSION_CODE=$(echo $VERSION | sed 's/\.//g')
+
+          # Update versionName and versionCode in build.gradle
+          sed -i "s/versionName \".*\"/versionName \"$VERSION\"/" app/build.gradle
+          sed -i "s/versionCode [0-9]*/versionCode $VERSION_CODE/" app/build.gradle
+
+      - name: Make gradlew executable
+        working-directory: frontend/android
+        run: chmod +x ./gradlew
+
+      - name: Build Android APK (unsigned)
+        working-directory: frontend/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Rename APK
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          mkdir -p release-artifacts
+          cp frontend/android/app/build/outputs/apk/release/*.apk release-artifacts/EmailAdmin-v${VERSION}-release.apk
+          # Also create a latest version for fixed download link
+          cp release-artifacts/EmailAdmin-v${VERSION}-release.apk release-artifacts/EmailAdmin-latest.apk
+
+      - name: Upload frontend dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend-dist.zip
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: release-artifacts/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          cp artifacts/frontend-dist/frontend-dist.zip release-files/
+          cp artifacts/android-apk/*.apk release-files/
+
+      - name: Delete existing latest release
+        uses: dev-drprasad/delete-tag-and-release@v1.1
+        with:
+          tag_name: latest
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          delete_release: true
+        continue-on-error: true
+
+      - name: Create Latest Release (fixed download link)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Release (v${{ steps.version.outputs.version }})"
+          body: |
+            ## 最新版本 v${{ steps.version.outputs.version }}
+
+            ### 下载链接（固定地址，始终指向最新版本）
+
+            - **前端页面**: [frontend-dist.zip](https://github.com/${{ github.repository }}/releases/download/latest/frontend-dist.zip)
+            - **Android APK**: [EmailAdmin-latest.apk](https://github.com/${{ github.repository }}/releases/download/latest/EmailAdmin-latest.apk)
+
+            ### 更新日志
+
+            请查看版本发布说明了解详细更新内容。
+
+            ---
+            *此 release 会在每次新版本发布时自动更新，下载链接保持不变。*
+          files: |
+            release-files/frontend-dist.zip
+            release-files/EmailAdmin-latest.apk
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Version Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: "Release v${{ steps.version.outputs.version }}"
+          body: |
+            ## 版本 v${{ steps.version.outputs.version }}
+
+            ### 下载
+
+            - **前端页面**: frontend-dist.zip
+            - **Android APK**: EmailAdmin-v${{ steps.version.outputs.version }}-release.apk
+
+            ### 固定下载链接（始终指向最新版本）
+
+            如果您希望始终下载最新版本，请使用以下链接：
+            - **前端页面**: https://github.com/${{ github.repository }}/releases/download/latest/frontend-dist.zip
+            - **Android APK**: https://github.com/${{ github.repository }}/releases/download/latest/EmailAdmin-latest.apk
+          files: |
+            release-files/frontend-dist.zip
+            release-files/EmailAdmin-v${{ steps.version.outputs.version }}-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

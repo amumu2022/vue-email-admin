@@ -100,9 +100,15 @@ temp/
 # ===========================
 # Capacitor (移动端)
 # ===========================
-android/
 ios/
 .capacitor
+
+# Android 构建产物（保留源代码，排除构建产物）
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+android/app/src/main/assets/public/
 
 # ===========================
 # TypeScript 缓存

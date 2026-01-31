@@ -15,7 +15,7 @@
         
         <el-alert type="info" :closable="false" show-icon>
           <template #title>
-            <strong>Base URL:</strong> <code>{{ baseUrl }}/api/open</code>
+            <strong>Base URL:</strong> <code>{{ baseUrl }}/api/v1/open</code>
           </template>
         </el-alert>
       </section>
